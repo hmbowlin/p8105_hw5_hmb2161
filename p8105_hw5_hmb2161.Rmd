@@ -4,11 +4,8 @@ output: github_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
 
 # Set Up
-
-
 library(tidyverse)
 
 knitr::opts_chunk$set(
@@ -17,7 +14,10 @@ knitr::opts_chunk$set(
   out.width = "90%"
 )
 theme_set(theme_bw() + theme(legend.position = "bottom"))
+```
 
+# Problem 1
+```{r}
 # Code Jeff gave us
 set.seed(10)
 
@@ -25,26 +25,23 @@ iris_with_missing = iris %>%
   map_df(~replace(.x, sample(1:150, 20), NA)) %>%
   mutate(Species = as.character(Species))
 
+is.list(iris_with_missing)
 
-```
-
-
-```{r}
 
 missing_value = function(x) {
-  if (is.numeric(x)) {
-    y = mean(x, na.rm = TRUE)
-    x = replace(x, is.na(x), y)
-  } else if (is.character(x)) {
-    x = replace(x, is.na, "virginica")
+  if (is.numeric(x)) {                    # if the value is numeric 
+    y = mean(x, na.rm = TRUE)             # take the mean of the column x and save it as a value y
+    x = replace(x, is.na(x), y)           # then replace any missing values in column x with the value y
+  } else if (is.character(x)) {           # if the value is character variable
+    x = replace(x, is.na(x), "virginica") # replace missing values in column x with virginica
   }
 }
 
+# create an output where i map my function onto each variable in my dataframe
+output = map_df(iris_with_missing, missing_value)   
 
-
-
-
-missing_value(iris_with_missing)
+# checking to see if my output really works
+output 
 
 ```
 
