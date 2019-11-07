@@ -53,10 +53,10 @@ output
 # Creating a tibble of data with file names and data
 
 prob_data = tibble(
-  files = list.files(path = "./hw5_data",      # creating a variable "files" for filenames
+  subject = list.files(path = "./hw5_data",      # creating a variable "files" for filenames
                      pattern = ".csv$", 
                      full.names = TRUE)) %>%
-  mutate(data =  map(files, read_csv)) %>%    # creating a variable "data" where i read the csv files
+  mutate(data =  map(subject, read_csv)) %>%    # creating a variable "data" where i read the csv files
   unnest()                                    # unnesting the variable "data"
 
 #tidy the resulting dataset
@@ -66,8 +66,12 @@ pivot_longer(prob_data,
              week_1:week_8,                  # pivoting longer to make each column a variable
              names_to = "week",
               values_to = "observations") %>%
-  mutate(files = str_remove(files, ".csv"),  # mutating the variable "files" to remove the .csv
-         files = str_remove(files, "./hw5_data/")) # and removing the beginning of the path of "files"
+  mutate(subject = str_remove(subject, "./hw5_data/"), # removing the beginning of the subject column
+         subject = str_remove(subject, ".csv"),
+         subject = str_replace(subject, "con_", "control"),
+         subject = str_replace(subject, "exp_", "experimental")) %>% # and removing the beginning of the path of "subject"
+  select(subject, week, observations)
+
 
 knitr::kable(prob_data)
 ```
@@ -78,6 +82,17 @@ knitr::kable(prob_data)
 
 # creating a spaghetti plot for the dataframe created above
 
+plot_ppt_data = 
+  ggplot(prob_data, aes(x = week, y = observations, color = subject, group = subject)) +
+  geom_point() +
+  geom_line(aes(color = subject)) +
+  viridis::scale_color_viridis(aes(color = subject), discrete = TRUE) +
+  labs(
+    title = "Participant Observations Over Weeks By Treatment Group",
+    x = "Weeks",
+    y = "Observation Values"
+  )
 
+plot_ppt_data
 ```
 
