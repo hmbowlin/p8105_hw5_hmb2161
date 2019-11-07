@@ -63,18 +63,20 @@ prob_data = tibble(
 
 prob_data =
 pivot_longer(prob_data, 
-             week_1:week_8,                  # pivoting longer to make each column a variable
+             week_1:week_8,                            # pivoting longer to make each column a variable
              names_to = "week",
               values_to = "observations") %>%
-  mutate(subject = str_remove(subject, "./hw5_data/"), # removing the beginning of the subject column
+  mutate(subject = str_remove(subject, "./hw5_data/"),    # removing beginning/end of the subject column
          subject = str_remove(subject, ".csv"),
-         subject = str_replace(subject, "con_", "control"),
-         subject = str_replace(subject, "exp_", "experimental")) %>% # and removing the beginning of the path of "subject"
-  select(subject, week, observations)
+         subject = str_replace(subject, "con_", "control "), # changing prefixes to full study arm
+         subject = str_replace(subject, "exp_", "experimental ")) %>% 
+  select(subject, week, observations)                   # selecting in the order I want  
 
-
-knitr::kable(prob_data)
+knitr::kable(prob_data)  # making a nice table
 ```
+
+
+NEED TO GROUP BY ARM
 
 # Problem 2: plot
 
@@ -94,5 +96,15 @@ plot_ppt_data =
   )
 
 plot_ppt_data
+```
+
+The resulting plot shows the observation values for each participant over the course of 8 weeks. The control group appear to have lower observation values across weeks of the study compared to the experimental arm. The participants generally start from a similar baseline (the groups are overlapped), but as the trial moves forward, the measurements get much higher for the experimental group and stay about the same for the control group. 
+
+ADD AVERAGES MAX/MIN ONCE GET IT GROUPED BY ARM
+
+# Problem 3
+
+```{r}
+
 ```
 
