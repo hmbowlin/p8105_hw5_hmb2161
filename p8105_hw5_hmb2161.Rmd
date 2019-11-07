@@ -66,17 +66,14 @@ pivot_longer(prob_data,
              week_1:week_8,                            # pivoting longer to make each column a variable
              names_to = "week",
               values_to = "observations") %>%
-  mutate(subject = str_remove(subject, "./hw5_data/"),    # removing beginning/end of the subject column
-         subject = str_remove(subject, ".csv"),
-         subject = str_replace(subject, "con_", "control "), # changing prefixes to full study arm
-         subject = str_replace(subject, "exp_", "experimental ")) %>% 
-  select(subject, week, observations)                   # selecting in the order I want  
+  mutate(subject = str_extract(subject, "(con|exp)_\\d{2}"),        # extracting out group 
+         group = str_extract(subject, "con|exp"),
+         group = fct_recode(group, "control" = "con",               # recoding group variable
+                            "experiment" = "exp")) %>%
+  select(subject, group, week, observations)                        # selecting in the order I want  
 
 knitr::kable(prob_data)  # making a nice table
 ```
-
-
-NEED TO GROUP BY ARM
 
 # Problem 2: plot
 
@@ -85,10 +82,10 @@ NEED TO GROUP BY ARM
 # creating a spaghetti plot for the dataframe created above
 
 plot_ppt_data = 
-  ggplot(prob_data, aes(x = week, y = observations, color = subject, group = subject)) +
+  ggplot(prob_data, aes(x = week, y = observations, color = group, group = subject)) +
   geom_point() +
-  geom_line(aes(color = subject)) +
-  viridis::scale_color_viridis(aes(color = subject), discrete = TRUE) +
+  geom_line() +
+  viridis::scale_color_viridis(aes(color = group), discrete = TRUE) +
   labs(
     title = "Participant Observations Over Weeks By Treatment Group",
     x = "Weeks",
@@ -100,11 +97,47 @@ plot_ppt_data
 
 The resulting plot shows the observation values for each participant over the course of 8 weeks. The control group appear to have lower observation values across weeks of the study compared to the experimental arm. The participants generally start from a similar baseline (the groups are overlapped), but as the trial moves forward, the measurements get much higher for the experimental group and stay about the same for the control group. 
 
-ADD AVERAGES MAX/MIN ONCE GET IT GROUPED BY ARM
-
 # Problem 3
 
 ```{r}
+sim_regression = function(n = 30, beta0 = 2, beta1) {
+  sim_data = tibble(
+    x = rnorm(n = 30, mean = 1, sd = 1),
+    y = beta0 + beta1 * x + rnorm(n, 0, 50)
+  )
+  
+  ls_fit = lm(y ~ x, data = sim_data)
+  
+  tibble(
+    beta0_hat = coef(ls_fit)[1],
+    beta1_hat = coef(ls_fit)[2]
+  )
+}
+
+
+
+models = list("beta1_one" = 1,
+              "beta1_two" = 2,
+              "beta1_three" = 3,
+              "beta1_four" = 4,
+              "beta1_five" = 5,
+              "beta1_six" = 6)
+
+output_total = vector("list", length = 6)
+
+for (i in 1:10000) {
+  output_total[[i]] = rerun(10000, sim_regression(models[[i]])) %>%
+                       bind_rows
+}
+
+broom::tidy(map(sim_regression(beta1 = models))
+
+broom::tidy(sim_results = bind_rows(output))
+
+
+sim_results = rerun(10000, sim_regression(n, 0, 50)) %>%
+  bind_rows() %>%
+  broom::tidy()
 
 ```
 
