@@ -121,11 +121,77 @@ models =
   select(-reg_data) %>%
   unnest(estimate_dfs)
 
+models
+
 ```
 
-## Problem 3: plots
+## Problem 3: Null Rejection by Beta1
 
 ```{r}
+library(patchwork)
+library(ggridges)
 
+models_reject = 
+  models %>%
+  group_by(beta1) %>%
+  count(reject = p.value < 0.05) %>%
+  mutate(reject_pct = n/sum(n) * 100) %>%
+  filter(reject == TRUE)
+  
+rejected_null = 
+ggplot(models_reject, aes(x = beta1, 
+                          y = reject_pct, 
+                          color = reject_pct)) +
+  geom_point() +
+  geom_line() +
+  viridis::scale_color_viridis(aes(color = reject_pct), 
+                               discrete = FALSE) +
+  labs(title = "Percent of Null Rejection by Beta 1",
+       x = "Beta 1",
+       y = "Percent of Rejected Null" )
+
+rejected_null
+    
+```
+As the effect size (beta1) gets larger, the percent of times the null is rejected increases, so the power increases.
+
+## Problem 3: Average Beta1 vs true Beta1
+
+```{r}
+models_avg = 
+  group_by(models, beta1) %>%
+  mutate(avg_beta1 = mean(beta1))
+
+average_beta1 = 
+  ggplot(models_avg, aes(x = beta1, y = avg_beta1, color = beta1)) +
+  geom_point() + 
+  geom_line() +
+    viridis::scale_color_viridis(aes(color = reject_pct), 
+                               discrete = FALSE) +
+  labs(title = "Avg Beta1 Compared to True Beta1",
+       x = "True Beta 1",
+       y = "Average Beta 1" )
+
+average_beta1
+
+overlay = 
+  ggplot(models_avg, aes(x = beta1, y = avg_beta1, color = beta1)) +
+  geom_point() + 
+  geom_line() +
+    viridis::scale_color_viridis(aes(color = reject_pct), 
+                               discrete = FALSE) +
+  labs(title = "Avg Beta1 Compared to True Beta1",
+       x = "True Beta 1",
+       y = "Average Beta 1" ) +
+  ggplot(models_reject, aes(x = beta1, y = reject_pct, color = reject_pct)) +
+  geom_point() +
+  geom_line() +
+  viridis::scale_color_viridis(aes(color = reject_pct), 
+                               discrete = FALSE) +
+  labs(title = "Percent of Null Rejection by Beta 1",
+       x = "Beta 1",
+       y = "Percent of Rejected Null" )
+
+overlay
 ```
 
