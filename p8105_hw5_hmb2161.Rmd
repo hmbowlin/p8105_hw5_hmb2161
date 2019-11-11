@@ -87,10 +87,14 @@ I pulled in each file and the data inside each file. I then turned this data int
 # creating a spaghetti plot for the dataframe created above with week on the x axis, observations on the y axis, grouped by subject, with the color as the treatment arm
 
 plot_ppt_data = 
-  ggplot(prob_data, aes(x = week, y = observations, color = group, group = subject)) +
+  ggplot(prob_data, aes(x = week, 
+                        y = observations, 
+                        color = group, 
+                        group = subject)) +
   geom_point(aes(color = subject)) +
   geom_line() +
-  viridis::scale_color_viridis(aes(color = group), discrete = TRUE) +
+  viridis::scale_color_viridis(aes(color = group), 
+                               discrete = TRUE) +
   labs(
     title = "Participant Observations Over Weeks By Treatment Group",
     x = "Weeks",
@@ -123,7 +127,8 @@ sim_regression = function(n = 30, beta0 = 2, beta1 = 0) {
 
 models = 
   tibble(beta1 = 0:6) %>%
-  mutate(reg_data = map(.x = beta1, ~rerun(10000, sim_regression(beta1 = .x))),
+  mutate(reg_data = 
+         map(.x = beta1, ~rerun(10000, sim_regression(beta1 = .x))),
          estimate_dfs = map(reg_data, bind_rows)) %>%
   select(-reg_data) %>%
   unnest(estimate_dfs)
@@ -180,7 +185,9 @@ models_avg =
 # graphing the average beta1 by color
 
 average_beta1 = 
-  ggplot(models_avg, aes(x = beta1, y = avg_beta1, color = beta1)) +
+  ggplot(models_avg, aes(x = beta1, 
+                         y = avg_beta1, 
+                         color = beta1)) +
   geom_point() + 
   geom_line() +
     viridis::scale_color_viridis(aes(color = beta1), 
@@ -208,7 +215,9 @@ avg_reject
 # plotted the dataframe above by true beta1 vs average beta1 for those values that were less than 0.05
 
 plot_two = 
-  ggplot(avg_reject, aes(x = beta1, y = avg_beta1, color = avg_beta1)) +
+  ggplot(avg_reject, aes(x = beta1, 
+                         y = avg_beta1, 
+                         color = avg_beta1)) +
   geom_point() +
   geom_line() +
   viridis::scale_color_viridis(aes(color = reject_pct), 
