@@ -187,6 +187,10 @@ average_beta1 =
 
 average_beta1
 
+```
+## Problem 3: Average Beta vs True Beta Among Rejected Nulls
+```{r}
+# created dataframe with average betas by p-values less than 0.05
 avg_reject = 
   models %>%
   filter(p.value < 0.05) %>%
@@ -194,6 +198,8 @@ avg_reject =
   summarize(avg_beta1 = mean(estimate))
   
 avg_reject
+
+# plotted the dataframe above by true beta1 vs average beta1 for those values that were less than 0.05
 
 plot_two = 
   ggplot(avg_reject, aes(x = beta1, y = avg_beta1, color = avg_beta1)) +
