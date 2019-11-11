@@ -59,27 +59,29 @@ prob_data = tibble(
   mutate(data =  map(subject, read_csv)) %>%    # creating a variable "data" where i read the csv files
   unnest()                                    # unnesting the variable "data"
 
-#tidy the resulting dataset
+#tidy the resulting dataset: pivoting longer to make each column a variable, extracting out group, recoding group variable, and selecting in the order I want 
 
 prob_data =
 pivot_longer(prob_data, 
-             week_1:week_8,                            # pivoting longer to make each column a variable
+             week_1:week_8,         
              names_to = "week",
-              values_to = "observations") %>%
-  mutate(subject = str_extract(subject, "(con|exp)_\\d{2}"), # extracting out group 
+             values_to = "observations") %>%
+  mutate(subject = str_extract(subject, "(con|exp)_\\d{2}"), 
          group = str_extract(subject, "con|exp"),
-         group = fct_recode(group, "control" = "con",               # recoding group variable
+         group = fct_recode(group, "control" = "con",    
                             "experiment" = "exp")) %>%
-  select(subject, group, week, observations)                        # selecting in the order I want  
+  select(subject, group, week, observations)       
 
-knitr::kable(prob_data)  # making a nice table
+# making a nice table
+
+knitr::kable(prob_data)  
 ```
 
 # Problem 2: plot
 
 ```{r}
 
-# creating a spaghetti plot for the dataframe created above
+# creating a spaghetti plot for the dataframe created above with week on the x axis, observations on the y axis, grouped by subject, with the color as the treatment arm
 
 plot_ppt_data = 
   ggplot(prob_data, aes(x = week, y = observations, color = group, group = subject)) +
@@ -100,12 +102,12 @@ The resulting plot shows the observation values for each participant over the co
 # Problem 3
 
 ```{r}
-set.seed(1)
+# creating an equation simulation for n = 30, beta0 = 2, and beta1 = 0
 
 sim_regression = function(n = 30, beta0 = 2, beta1 = 0) {
   sim_data = tibble(
     x = rnorm(n = 30, mean = 1, sd = 1),
-    y = beta0 + beta1 * x + rnorm(n, 0, 50)
+    y = beta0 + beta1 * x + rnorm(n, 0, 50)    
   )
   
   ls_fit = lm(y ~ x, data = sim_data) %>%
@@ -114,6 +116,8 @@ sim_regression = function(n = 30, beta0 = 2, beta1 = 0) {
 
 }
 
+# creating a dataframe with the regression simulation run 10,000 times for beta1 = {0, 1, 2, 3, 4, 5, 6} including p-values and estimated beta1 value
+
 models = 
   tibble(beta1 = 0:6) %>%
   mutate(reg_data = map(.x = beta1, ~rerun(10000, sim_regression(beta1 = .x))),
@@ -121,15 +125,17 @@ models =
   select(-reg_data) %>%
   unnest(estimate_dfs)
 
-models
+# showing an example few rows of my simulation results
+
+knitr::kable(head(models))
 
 ```
 
 ## Problem 3: Null Rejection by Beta1
 
 ```{r}
-library(patchwork)
-library(ggridges)
+
+# creating a dataframe grouped by beta1 and summarized by the p-value > 0.05 with a proportion of times I rejected the null
 
 models_reject = 
   models %>%
@@ -138,6 +144,8 @@ models_reject =
   mutate(reject_pct = n/sum(n) * 100) %>%
   filter(reject == TRUE)
   
+# creating graph of when we rejected the null against the beta1 value 
+
 rejected_null = 
 ggplot(models_reject, aes(x = beta1, 
                           y = reject_pct, 
@@ -158,9 +166,14 @@ As the effect size (beta1) gets larger, the percent of times the null is rejecte
 ## Problem 3: Average Beta1 vs true Beta1
 
 ```{r}
+# taking the models dataset, grouping by beta1, and taking the average of the beta1
+
 models_avg = 
-  group_by(models, beta1) %>%
-  mutate(avg_beta1 = mean(beta1))
+  models %>%
+  group_by(beta1) %>%
+  summarize(avg_beta1 = mean(estimate))
+
+# graphing the average beta1 by color
 
 average_beta1 = 
   ggplot(models_avg, aes(x = beta1, y = avg_beta1, color = beta1)) +
@@ -174,24 +187,24 @@ average_beta1 =
 
 average_beta1
 
-overlay = 
-  ggplot(models_avg, aes(x = beta1, y = avg_beta1, color = beta1)) +
-  geom_point() + 
-  geom_line() +
-    viridis::scale_color_viridis(aes(color = reject_pct), 
-                               discrete = FALSE) +
-  labs(title = "Avg Beta1 Compared to True Beta1",
-       x = "True Beta 1",
-       y = "Average Beta 1" ) +
-  ggplot(models_reject, aes(x = beta1, y = reject_pct, color = reject_pct)) +
+avg_reject = 
+  models %>%
+  filter(p.value < 0.05) %>%
+  group_by(beta1) %>%
+  summarize(avg_beta1 = mean(estimate))
+  
+avg_reject
+
+plot_two = 
+  ggplot(avg_reject, aes(x = beta1, y = avg_beta1, color = avg_beta1)) +
   geom_point() +
   geom_line() +
   viridis::scale_color_viridis(aes(color = reject_pct), 
                                discrete = FALSE) +
-  labs(title = "Percent of Null Rejection by Beta 1",
-       x = "Beta 1",
-       y = "Percent of Rejected Null" )
+  labs(title = "Avg Beta1 Compared to True Beta1 Among Rejected P.Values",
+       x = "True Beta 1",
+       y = "Average Beta 1" )
 
-overlay
+plot_two
 ```
 
