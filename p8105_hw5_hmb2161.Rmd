@@ -46,19 +46,20 @@ output = map_df(iris_with_missing, missing_value)
 output 
 
 ```
+Each missing numeric value was replaced by the mean value of that column and for the species variable each missing value was replaced with "virginica". 
 
 # Problem 2: data
 
 ```{r}
 
-# Creating a tibble of data with file names and data
+# Creating a tibble of data with file names and data, creating a variable "files" for filenames, creating a variable "data" where i read the csv files, and finally unnesting the variable "data"
 
 prob_data = tibble(
-  subject = list.files(path = "./hw5_data",      # creating a variable "files" for filenames
+  subject = list.files(path = "./hw5_data",      
                      pattern = ".csv$", 
                      full.names = TRUE)) %>%
-  mutate(data =  map(subject, read_csv)) %>%    # creating a variable "data" where i read the csv files
-  unnest()                                    # unnesting the variable "data"
+  mutate(data =  map(subject, read_csv)) %>%    
+  unnest()                                   
 
 #tidy the resulting dataset: pivoting longer to make each column a variable, extracting out group, recoding group variable, and selecting in the order I want 
 
@@ -77,6 +78,7 @@ pivot_longer(prob_data,
 
 knitr::kable(prob_data)  
 ```
+I pulled in each file and the data inside each file. I then turned this data into a tidy dataset with each subject in a row. I left con and exp in the subject id as they uniquely identify participants as participant 1 in the control group or experimental group. Ideally I would have created an autonumber id for these participants when inputting the data into the csv's. 
 
 # Problem 2: plot
 
@@ -131,6 +133,7 @@ models =
 knitr::kable(head(models))
 
 ```
+The regression simulation ran a regression for random values that are normally distributed with n = 30, mean = 1, and sd = 1. When I created my tibble I reran the simulation 10,000 times and saved each beta 1, estimated beta 1, and p-value. 
 
 ## Problem 3: Null Rejection by Beta1
 
@@ -162,7 +165,7 @@ ggplot(models_reject, aes(x = beta1,
 rejected_null
     
 ```
-As the effect size (beta1) gets larger, the percent of times the null is rejected increases, so the power increases.
+This plot shows the dataset above filtered for when the p-value is less than 0.05. We reject the p-value when it is below this alpha of 0.05. The graph displays a positive linear association between beta 1 and percent of rejected null. This indicates that as the effect size (beta1) gets larger, the percent of times the null is rejected increases, so the power increases.
 
 ## Problem 3: Average Beta1 vs true Beta1
 
@@ -180,7 +183,7 @@ average_beta1 =
   ggplot(models_avg, aes(x = beta1, y = avg_beta1, color = beta1)) +
   geom_point() + 
   geom_line() +
-    viridis::scale_color_viridis(aes(color = reject_pct), 
+    viridis::scale_color_viridis(aes(color = beta1), 
                                discrete = FALSE) +
   labs(title = "Avg Beta1 Compared to True Beta1",
        x = "True Beta 1",
@@ -189,6 +192,8 @@ average_beta1 =
 average_beta1
 
 ```
+I averaged the "estimate" value in my initial tibble to create an average beta 1 variable and graphed it against the true beta1. The average beta 1 and true beta 1 have a positive linear association. Average beta 1 trends lower than the true beta 1.
+
 ## Problem 3: Average Beta vs True Beta Among Rejected Nulls
 ```{r}
 # created dataframe with average betas by p-values less than 0.05
